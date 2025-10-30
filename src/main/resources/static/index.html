@@ -1,153 +1,283 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<title>Naruto Monolito — Gestión</title>
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="UTF-8">
+<title>Naruto Monolito - Panel Administrativo</title>
 <style>
-  body { font-family: Arial, sans-serif; background:#f4f6f8; margin:0; padding:18px; color:#222; }
-  header { text-align:center; margin-bottom:14px; }
-  h1 { color:#c62828; margin:0; }
-  .container { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-  section { background:#fff; padding:12px; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
-  .full { grid-column:1 / -1; }
-  label { display:block; font-size:13px; margin-top:8px; }
-  input[type="text"], input[type="number"], select, textarea { width:100%; box-sizing:border-box; padding:6px 8px; margin-top:6px; border-radius:6px; border:1px solid #ccd; }
-  button { margin-top:8px; padding:8px 12px; border-radius:6px; border:0; background:#0b5; color:#fff; cursor:pointer; }
-  button.secondary { background:#0077b6; }
-  button.danger { background:#d62828; }
-  ul { list-style:none; padding:0; margin:0; }
-  li.card { border:1px solid #e3e7ea; padding:8px; margin-bottom:8px; border-radius:6px; background:#fbfeff; }
-  .muted { color:#666; font-size:13px; }
-  .row { display:flex; gap:8px; align-items:center; }
-  .small { font-size:13px; padding:6px 8px; }
-  .notice { background:#fff3cd; border:1px solid #ffeeba; padding:8px; border-radius:6px; margin-bottom:8px; color:#856404; }
-  .error { background:#fdecea; border:1px solid #f5c6cb; padding:8px; border-radius:6px; margin-bottom:8px; color:#842029; }
+  body { font-family: Arial; background: #f5f5f5; margin: 20px; }
+  h2 { background: #222; color: #fff; padding: 8px; border-radius: 6px; }
+  section { background: white; padding: 15px; border-radius: 6px; margin-bottom: 20px; box-shadow: 0 0 5px #aaa; }
+  label { display: block; margin-top: 5px; }
+  input, select, textarea { width: 100%; margin-bottom: 8px; padding: 5px; }
+  button { background: #007bff; color: white; padding: 6px 12px; border: none; border-radius: 5px; cursor: pointer; }
+  button:hover { background: #0056b3; }
+  pre { background: #eee; padding: 10px; border-radius: 6px; overflow-x: auto; }
 </style>
 </head>
 <body>
-<header>
-  <h1>🌀 Naruto Monolito — Panel de Gestión</h1>
-  <p class="muted">Crear / listar / asignar / exportar — interfaz funcional</p>
-</header>
 
-<div id="messages"></div>
+<h1>Aplicación Monolitica Gestión de Ninjas</h1>
 
-<div class="container">
+<!-- ================== ALDEAS ================== -->
+<section id="aldeas">
+  <h2>Aldeas</h2>
+  <button onclick="listarAldeas()">Listar Aldeas</button>
+  <pre id="listaAldeas"></pre>
+</section>
 
-  <!-- ALDEAS: listar y crear -->
-  <section>
-    <h2>Aldeas</h2>
-    <div class="row">
-      <button id="btnLoadAldeas" class="secondary small">Cargar aldeas</button>
-      <button id="btnOpenCrearAldea" class="small">Crear aldea</button>
-    </div>
+<!-- ================== NINJAS ================== -->
+<section id="ninjas">
+  <h2>Ninjas</h2>
+  <form id="formNinja">
+    <label>Nombre:</label>
+    <input type="text" id="ninjaNombre" required>
 
-    <div id="crearAldeaBox" style="display:none; margin-top:10px;">
-      <label>Nombre</label>
-      <input id="aldeaNombre" type="text" />
-      <label>País</label>
-      <input id="aldeaPais" type="text" />
-      <label>Descripción</label>
-      <textarea id="aldeaDescripcion" rows="2"></textarea>
-      <div class="row">
-        <button id="btnCrearAldea">Crear</button>
-        <button id="btnCancelarCrearAldea" class="danger small">Cancelar</button>
-      </div>
-    </div>
-
-    <ul id="listaAldeas" style="margin-top:12px;"></ul>
-  </section>
-
-  <!-- NINJAS: crear y listar -->
-  <section>
-    <h2>Ninjas</h2>
-
-    <label>Nombre</label>
-    <input id="ninjaNombre" type="text" placeholder="Ej: Naruto Uzumaki" />
-    <label>Rango</label>
+    <label>Rango Ninja:</label>
     <select id="ninjaRango">
-      <option>GENIN</option><option>CHUNIN</option><option>JONIN</option>
+      <option value="GENIN">GENIN</option>
+      <option value="CHUNIN">CHUNIN</option>
+      <option value="JONIN">JONIN</option>
     </select>
 
-    <label>Ataque</label>
-    <input id="ninjaAtaque" type="number" value="50" />
-    <label>Defensa</label>
-    <input id="ninjaDefensa" type="number" value="50" />
-    <label>Chakra</label>
-    <input id="ninjaChakra" type="number" value="50" />
+    <label>Ataque:</label>
+    <input type="number" id="ninjaAtaque" required>
 
-    <label>Aldea</label>
-    <select id="ninjaAldea"><option value="">-- Selecciona aldea --</option></select>
+    <label>Defensa:</label>
+    <input type="number" id="ninjaDefensa" required>
 
-    <div style="margin-top:10px;">
-      <strong>Jutsus</strong>
-      <div id="jutsusContainer"></div>
-      <div class="row" style="margin-top:8px;">
-        <button id="btnAddJutsu" class="small">+ Añadir jutsu</button>
-        <button id="btnClearJutsus" class="small">Limpiar jutsus</button>
-      </div>
-    </div>
+    <label>Chakra:</label>
+    <input type="number" id="ninjaChakra" required>
 
-    <div class="row" style="margin-top:10px;">
-      <button id="btnCrearNinja">Registrar Ninja</button>
-      <button id="btnLoadNinjas" class="secondary small">Listar Ninjas</button>
-    </div>
+    <label>Aldea:</label>
+    <select id="ninjaAldea"></select>
 
-    <hr />
-    <ul id="listaNinjas" style="margin-top:8px;"></ul>
-  </section>
+    <button type="submit">Registrar Ninja</button>
+  </form>
 
-  <!-- MISIONES: crear y listar -->
-  <section>
-    <h2>Misiones</h2>
-    <label>Nombre</label>
-    <input id="misionNombre" type="text" />
-    <label>Descripción</label>
-    <input id="misionDesc" type="text" />
-    <label>Dificultad</label>
-    <select id="misionDificultad">
-      <option value="D">D</option><option value="C">C</option><option value="B">B</option><option value="A">A</option><option value="S">S</option>
+  <button onclick="listarNinjas()">Listar Ninjas</button>
+  <pre id="listaNinjas"></pre>
+
+  <h3>Asignar Jutsu a Ninja</h3>
+  <label>Ninja:</label>
+  <select id="ninjaSelect"></select>
+
+  <label>Jutsu:</label>
+  <select id="jutsuSelect"></select>
+
+  <button onclick="asignarJutsu()">Asignar</button>
+</section>
+
+<!-- ================== JUTSUS ================== -->
+<section id="jutsus">
+  <h2>Jutsus</h2>
+  <form id="formJutsu">
+    <label>Nombre:</label>
+    <input type="text" id="jutsuNombre" required>
+
+    <label>Tipo:</label>
+    <input type="text" id="jutsuTipo" required>
+
+    <label>Daño:</label>
+    <input type="number" id="jutsuDanio" required>
+
+    <label>Chakra:</label>
+    <input type="number" id="jutsuChakra" required>
+
+    <button type="submit">Registrar Jutsu</button>
+  </form>
+
+  <button onclick="listarJutsus()">Listar Jutsus</button>
+  <pre id="listaJutsus"></pre>
+</section>
+
+<!-- ================== MISIONES ================== -->
+<section id="misiones">
+  <h2>Misiones</h2>
+  <form id="formMision">
+    <label>Nombre:</label>
+    <input type="text" id="misionNombre" required>
+
+    <label>Descripción:</label>
+    <textarea id="misionDescripcion" required></textarea>
+
+    <label>Rango Misión:</label>
+    <select id="misionRango">
+      <option value="D">D</option>
+      <option value="C">C</option>
+      <option value="B">B</option>
+      <option value="A">A</option>
+      <option value="S">S</option>
     </select>
-    <label>Recompensa</label>
-    <input id="misionRecompensa" type="number" value="100" />
 
-    <div class="row" style="margin-top:10px;">
-      <button id="btnCrearMision">Crear Misión</button>
-      <button id="btnLoadMisiones" class="secondary small">Listar Misiones</button>
-    </div>
+    <label>Recompensa:</label>
+    <input type="number" id="misionRecompensa" required>
 
-    <hr />
-    <ul id="listaMisiones" style="margin-top:8px;"></ul>
-  </section>
+    <label>Rango Ninja mínimo:</label>
+    <select id="misionRangoMin">
+      <option value="GENIN">GENIN</option>
+      <option value="CHUNIN">CHUNIN</option>
+      <option value="JONIN">JONIN</option>
+    </select>
 
-  <!-- ASIGNACIÓN RÁPIDA -->
-  <section>
-    <h2>Asignar Ninja a Misión</h2>
-    <label>Misión</label>
-    <select id="selectAsignarMision"></select>
-    <label>Ninja</label>
-    <select id="selectAsignarNinja"></select>
-    <div class="row" style="margin-top:10px;">
-      <button id="btnAsignar">Asignar</button>
-    </div>
-    <div id="assignResult" style="margin-top:8px;"></div>
-  </section>
+    <button type="submit">Registrar Misión</button>
+  </form>
 
-  <!-- EXPORTES -->
-  <section class="full">
-    <h2>Exportar Informes</h2>
-    <p class="muted">Generar informes que contienen aldeas, ninjas y misiones.</p>
-    <div class="row">
-      <button onclick="exportar('json')" class="secondary small">Exportar JSON</button>
-      <button onclick="exportar('xml')" class="secondary small">Exportar XML</button>
-      <button onclick="exportar('txt')" class="secondary small">Exportar TXT</button>
-    </div>
-    <p class="muted" style="margin-top:8px;">Los archivos se descargan automáticamente y el servidor los genera en carpeta <code>/export/</code>.</p>
-  </section>
+  <button onclick="listarMisiones()">Listar Misiones</button>
+  <pre id="listaMisiones"></pre>
+  
+  <h3>Asignar Ninja a Misión</h3>
+  <label>Misión:</label>
+  <select id="misionSelect"></select>
 
-</div>
+  <label>Ninja:</label>
+  <select id="ninjaSelect"></select>
 
-<script src="app.js"></script>
+  <button onclick="asignarNinja()">Asignar</button>
+
+</section>
+
+<!-- ================== REPORTES ================== -->
+<section id="reportes">
+  <h2>Reportes</h2>
+  <button onclick="exportar('txt')">Exportar TXT</button>
+  <button onclick="exportar('json')">Exportar JSON</button>
+  <button onclick="exportar('xml')">Exportar XML</button>
+</section>
+
+<script>
+const api = '/api';
+
+
+// ================== ALDEAS ==================
+async function listarAldeas() {
+  const res = await fetch(`${api}/aldeas`);
+  const data = await res.json();
+  document.getElementById('listaAldeas').textContent = JSON.stringify(data, null, 2);
+  // Cargar aldeas en select de ninjas
+  const sel = document.getElementById('ninjaAldea');
+  sel.innerHTML = '';
+  data.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a.id;
+    opt.textContent = a.nombre + ' (' + a.nacion + ')';
+    sel.appendChild(opt);
+  });
+}
+
+// ================== NINJAS ==================
+document.getElementById('formNinja').addEventListener('submit', async e => {
+  e.preventDefault();
+  const body = {
+    nombre: ninjaNombre.value,
+    rango: ninjaRango.value,
+    ataque: parseInt(ninjaAtaque.value),
+    defensa: parseInt(ninjaDefensa.value),
+    chakra: parseInt(ninjaChakra.value),
+    aldea: { id: parseInt(ninjaAldea.value) }
+  };
+  await fetch(`${api}/ninjas`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  listarNinjas();
+});
+
+async function listarNinjas() {
+  const res = await fetch(`${api}/ninjas`);
+  const data = await res.json();
+  document.getElementById('listaNinjas').textContent = JSON.stringify(data, null, 2);
+  // Actualizar dropdown para asignar jutsus
+  const sel = document.getElementById('ninjaSelect');
+  sel.innerHTML = '';
+  data.forEach(n => {
+    const opt = document.createElement('option');
+    opt.value = n.id;
+    opt.textContent = n.nombre + ' (' + n.rango + ')';
+    sel.appendChild(opt);
+  });
+}
+
+async function asignarJutsu() {
+  const ninjaId = ninjaSelect.value;
+  const jutsuId = jutsuSelect.value;
+  await fetch(`${api}/ninjas/${ninjaId}/asignar-jutsu/${jutsuId}`, { method: 'POST' });
+  alert('Jutsu asignado correctamente');
+  listarNinjas();
+}
+
+async function asignarNinja() {
+  const ninjaId = ninjaSelect.value;
+  const misionId = misionSelect.value;
+  await fetch(`${api}/misiones/{misionId}/asignar/{ninjaId}`, { method: 'POST' });
+  alert('Ninja asignado correctamente');
+  listarMisiones();
+}
+
+// ================== JUTSUS ==================
+document.getElementById('formJutsu').addEventListener('submit', async e => {
+  e.preventDefault();
+  const body = {
+    nombre: jutsuNombre.value,
+    tipo: jutsuTipo.value,
+    danio: parseInt(jutsuDanio.value),
+    chakra: parseInt(jutsuChakra.value)
+  };
+  await fetch(`${api}/jutsus`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  listarJutsus();
+});
+
+async function listarJutsus() {
+  const res = await fetch(`${api}/jutsus`);
+  const data = await res.json();
+  document.getElementById('listaJutsus').textContent = JSON.stringify(data, null, 2);
+  // Actualizar dropdown para asignar jutsus
+  const sel = document.getElementById('jutsuSelect');
+  sel.innerHTML = '';
+  data.forEach(j => {
+    const opt = document.createElement('option');
+    opt.value = j.id;
+    opt.textContent = j.nombre + ' (' + j.tipo + ')';
+    sel.appendChild(opt);
+  });
+}
+
+// ================== MISIONES ==================
+document.getElementById('formMision').addEventListener('submit', async e => {
+  e.preventDefault();
+  const body = {
+    nombre: misionNombre.value,
+    descripcion: misionDescripcion.value,
+    rango: misionRango.value,
+    recompensa: parseInt(misionRecompensa.value),
+    rangoMinimo: misionRangoMin.value
+  };
+  await fetch(`${api}/misiones`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  listarMisiones();
+});
+
+async function listarMisiones() {
+  const res = await fetch(`${api}/misiones`);
+  const data = await res.json();
+  document.getElementById('listaMisiones').textContent = JSON.stringify(data, null, 2);
+  // Actualizar dropdown para asignar ninjas
+  const sel = document.getElementById('misionSelect');
+  sel.innerHTML = '';
+  data.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.id;
+    opt.textContent = m.nombre + ' (' + m.rango + ')';
+    sel.appendChild(opt);
+  });
+}
+
+// ================== REPORTES ==================
+function exportar(tipo) {
+  window.open(`${api}/reportes/${tipo}`, '_blank');
+}
+
+// ================== INICIALIZACIÓN ==================
+listarAldeas();
+listarJutsus();
+listarNinjas();
+listarMisiones();
+</script>
+
 </body>
 </html>

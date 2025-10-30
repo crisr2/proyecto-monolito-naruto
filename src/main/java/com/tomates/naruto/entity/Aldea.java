@@ -1,6 +1,8 @@
 package com.tomates.naruto.entity;
 import jakarta.persistence.*;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 
 @Entity
 public class Aldea {
@@ -10,6 +12,7 @@ public class Aldea {
     private String nacion;
 
     @OneToMany(mappedBy = "aldea", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Ninja> ninjas;
 
     // Getters y Setters

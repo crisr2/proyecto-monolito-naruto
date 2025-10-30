@@ -1,332 +1,291 @@
-// app.js - cliente mínimo funcional para aldeas, ninjas, misiones, exportes
-const API = "/api";
-const messages = document.getElementById("messages");
+// RUTAS base API
+const API_BASE = "/api";
+const ALDEAS_API = `${API_BASE}/aldeas`;
+const NINJAS_API = `${API_BASE}/ninjas`;
+const JUTSUS_API = `${API_BASE}/jutsus`;
+const MISIONES_API = `${API_BASE}/misiones`;
+const REPORTES_API = `${API_BASE}/reportes`;
 
-function showMsg(text, type="info", timeout=4500) {
-  const div = document.createElement("div");
-  div.className = type === "error" ? "error" : (type === "notice" ? "notice" : "notice");
-  div.textContent = text;
-  messages.appendChild(div);
-  setTimeout(() => div.remove(), timeout);
+/* ---------- HELPERS ---------- */
+function el(selector) { return document.querySelector(selector); }
+function elAll(selector) { return document.querySelectorAll(selector); }
+function createElem(tag, inner = '') { const e = document.createElement(tag); e.innerHTML = inner; return e; }
+async function fetchJson(url, opts) {
+  const r = await fetch(url, opts);
+  if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`);
+  return r.json();
 }
-
-/* ---------------- ALDEAS ---------------- */
-document.getElementById("btnLoadAldeas").addEventListener("click", loadAldeas);
-document.getElementById("btnOpenCrearAldea").addEventListener("click", () => {
-  document.getElementById("crearAldeaBox").style.display = "block";
-});
-document.getElementById("btnCancelarCrearAldea").addEventListener("click", () => {
-  document.getElementById("crearAldeaBox").style.display = "none";
-});
-document.getElementById("btnCrearAldea").addEventListener("click", async () => {
-  const nombre = document.getElementById("aldeaNombre").value.trim();
-  const pais = document.getElementById("aldeaPais").value.trim();
-  const descripcion = document.getElementById("aldeaDescripcion").value.trim();
-  if (!nombre) { showMsg("Nombre de la aldea requerido", "error"); return; }
-  try {
-    const res = await fetch(`${API}/aldeas`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({nombre,pais,descripcion})
-    });
-    if (!res.ok) throw new Error("Error al crear aldea");
-    showMsg("Aldea creada");
-    document.getElementById("crearAldeaBox").style.display = "none";
-    document.getElementById("aldeaNombre").value = "";
-    document.getElementById("aldeaPais").value = "";
-    document.getElementById("aldeaDescripcion").value = "";
-    await loadAldeas();
-    await loadAldeaSelects();
-  } catch(e) { showMsg(e.message, "error"); }
-});
-
-async function loadAldeas() {
-  const res = await fetch(`${API}/aldeas`);
-  if (!res.ok) { showMsg("No se pudo cargar aldeas", "error"); return; }
-  const aldeas = await res.json();
-  const ul = document.getElementById("listaAldeas");
+function showList(container, itemsHtml) {
+  const ul = el(container);
   ul.innerHTML = "";
-  aldeas.forEach(a => {
-    const li = document.createElement("li");
-    li.className = "card";
-    const ninjas = (a.ninjas && a.ninjas.length) ? a.ninjas.map(n=>`${n.nombre} (${n.rango})`).join(", ") : "Sin ninjas";
-    li.innerHTML = `<strong>${a.nombre}</strong> <span class="muted">(${a.pais || ""})</span>
-      <div class="muted" style="margin-top:6px">${a.descripcion || ""}</div>
-      <div style="margin-top:8px;"><b>Ninjas:</b> ${ninjas}</div>`;
+  itemsHtml.forEach(h => {
+    const li = createElem("li", h);
+    li.className = "item";
     ul.appendChild(li);
   });
 }
-
-/* ---------------- NINJAS ---------------- */
-document.getElementById("btnAddJutsu").addEventListener("click", addJutsuField);
-document.getElementById("btnClearJutsus").addEventListener("click", clearJutsuFields);
-document.getElementById("btnCrearNinja").addEventListener("click", crearNinja);
-document.getElementById("btnLoadNinjas").addEventListener("click", loadNinjas);
-
-function addJutsuField() {
-  const container = document.getElementById("jutsusContainer");
-  const idx = container.children.length;
-  const div = document.createElement("div");
-  div.style.marginTop = "6px";
-  div.innerHTML = `
-    <input placeholder="Nombre jutsu" data-name />
-    <input placeholder="Tipo" data-type />
-    <input placeholder="Daño" type="number" data-dano style="width:80px" />
-    <input placeholder="Chakra" type="number" data-chakra style="width:80px" />
-    <button class="small" data-remove>Quitar</button>
-  `;
-  container.appendChild(div);
-  div.querySelector("[data-remove]").addEventListener("click", () => div.remove());
+function downloadBlob(blob, filename, type) {
+  const url = URL.createObjectURL(new Blob([blob], { type }));
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; document.body.appendChild(a);
+  a.click(); a.remove(); URL.revokeObjectURL(url);
 }
 
-function clearJutsuFields() {
-  document.getElementById("jutsusContainer").innerHTML = "";
-}
-
-async function crearNinja() {
-  const nombre = document.getElementById("ninjaNombre").value.trim();
-  const rango = document.getElementById("ninjaRango").value;
-  const ataque = parseInt(document.getElementById("ninjaAtaque").value);
-  const defensa = parseInt(document.getElementById("ninjaDefensa").value);
-  const chakra = parseInt(document.getElementById("ninjaChakra").value);
-  const aldeaId = document.getElementById("ninjaAldea").value || null;
-
-  if (!nombre) { showMsg("Nombre requerido", "error"); return; }
-  if (isNaN(ataque)||isNaN(defensa)||isNaN(chakra)) { showMsg("Valores numéricos inválidos", "error"); return; }
-
-  // recoger jutsus
-  const jutsuNodes = Array.from(document.querySelectorAll("#jutsusContainer > div"));
-  const jutsus = jutsuNodes.map(div => {
-    const nombreJ = div.querySelector("[data-name]").value.trim();
-    const tipo = div.querySelector("[data-type]").value.trim();
-    const dano = parseInt(div.querySelector("[data-dano]").value) || 0;
-    const chakraJ = parseInt(div.querySelector("[data-chakra]").value) || 0;
-    return { nombre: nombreJ, tipo, dano, chakra: chakraJ };
-  }).filter(j => j.nombre);
-
-  const payload = {
-    nombre, rango, ataque, defensa, chakra,
-    jutsus,
-    aldea: aldeaId ? { id: Number(aldeaId) } : null
-  };
-
-  try {
-    const res = await fetch(`${API}/ninjas`, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || "Error al crear ninja");
-    }
-    showMsg("Ninja creado");
-    clearNinjaForm();
-    await loadNinjas();
-    await loadAldeas();
-    await loadAldeaSelects();
-    await loadAssignSelects();
-  } catch (e) { showMsg(e.message, "error"); }
-}
-
-function clearNinjaForm() {
-  document.getElementById("ninjaNombre").value = "";
-  document.getElementById("ninjaAtaque").value = 50;
-  document.getElementById("ninjaDefensa").value = 50;
-  document.getElementById("ninjaChakra").value = 50;
-  clearJutsuFields();
-}
-
-async function loadNinjas() {
-  const res = await fetch(`${API}/ninjas`);
-  if (!res.ok) { showMsg("No se pudieron cargar ninjas", "error"); return; }
-  const ninjas = await res.json();
-  const ul = document.getElementById("listaNinjas");
-  ul.innerHTML = "";
-  ninjas.forEach(n => {
-    const li = document.createElement("li");
-    li.className = "card";
-    const aldeaText = n.aldea ? `${n.aldea.nombre}` : "Sin aldea";
-    const jutsus = n.jutsus && n.jutsus.length ? n.jutsus.map(j=>j.nombre).join(", ") : "Sin jutsus";
-    li.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <strong>${n.nombre}</strong> <span class="muted">(${n.rango})</span><br/>
-        <span class="muted">A:${n.ataque} D:${n.defensa} C:${n.chakra} — Aldea: ${aldeaText}</span><br/>
-        <small><b>Jutsus:</b> ${jutsus}</small>
-      </div>
-      <div style="text-align:right">
-        <div>ID:${n.id}</div>
-        <button onclick="eliminarNinja(${n.id})" class="danger small">Eliminar</button>
-      </div>
-    </div>`;
-    ul.appendChild(li);
+/* ---------- ALDEAS ---------- */
+async function crearAldea() {
+  const nombre = el("#aldeaNombre").value.trim();
+  const nacion = el("#aldeaNacion").value.trim();
+  const descripcion = el("#aldeaDescripcion").value.trim();
+  if (!nombre || !nacion) { alert("Nombre y Nación son obligatorios."); return; }
+  await fetchJson(ALDEAS_API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nombre, nacion, descripcion })
   });
+  alert("Aldea creada.");
+  el("#aldeaNombre").value = el("#aldeaNacion").value = el("#aldeaDescripcion").value = "";
+  await listarAldeas(); await refrescarSelects();
 }
 
-async function eliminarNinja(id) {
-  if (!confirm("Confirmar eliminar ninja #" + id)) return;
-  const res = await fetch(`${API}/ninjas/${id}`, { method: "DELETE" });
-  if (res.ok) {
-    showMsg("Ninja eliminado");
-    await loadNinjas();
-    await loadAldeas();
-    await loadAssignSelects();
-  } else {
-    showMsg("Error eliminando ninja", "error");
+async function listarAldeas() {
+  try {
+    const aldeas = await fetchJson(ALDEAS_API);
+    const items = aldeas.map(a => {
+      const ninjas = a.ninjas && a.ninjas.length ? a.ninjas.map(n => `${n.id}:${n.nombre}`).join(", ") : "Sin ninjas";
+      return `<div>
+                <div><strong>ID:</strong> ${a.id} — <strong>${a.nombre}</strong> (${a.nacion})</div>
+                <div class="muted">${a.descripcion || ""}</div>
+                <div><small><strong>Ninjas:</strong> ${ninjas}</small></div>
+              </div>`;
+    });
+    showList("#listaAldeas", items);
+  } catch (e) {
+    alert("Error listando aldeas: " + e.message);
   }
 }
 
-/* ---------------- MISIONES ---------------- */
-document.getElementById("btnCrearMision").addEventListener("click", crearMision);
-document.getElementById("btnLoadMisiones").addEventListener("click", loadMisiones);
-
-async function crearMision() {
-  const nombre = document.getElementById("misionNombre").value.trim();
-  const descripcion = document.getElementById("misionDesc").value.trim();
-  const dificultad = document.getElementById("misionDificultad").value;
-  const recompensa = parseInt(document.getElementById("misionRecompensa").value);
-  if (!nombre) { showMsg("Nombre de misión requerido", "error"); return; }
-  if (isNaN(recompensa)) { showMsg("Recompensa inválida", "error"); return; }
-
-  const payload = { nombre, descripcion, dificultad, recompensa };
-  const res = await fetch(`${API}/misiones`, {
+/* ---------- JUTSUS ---------- */
+async function crearJutsu() {
+  const nombre = el("#jutsuNombre").value.trim();
+  const tipo = el("#jutsuTipo").value.trim();
+  const danio = parseInt(el("#jutsudanio").value);
+  const chakra = parseInt(el("#jutsuChakra").value);
+  if (!nombre || !tipo || isNaN(danio) || isNaN(chakra)) { alert("Completa todos los campos de jutsu."); return; }
+  await fetchJson(JUTSUS_API, {
     method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(payload)
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify({ nombre, tipo, descripcion: "", chakra: chakra, danio })
   });
+  alert("Jutsu creado.");
+  el("#jutsuNombre").value = el("#jutsuTipo").value = el("#jutsudanio").value = el("#jutsuChakra").value = "";
+  await listarJutsus(); await refrescarSelects();
+}
+
+async function listarJutsus() {
+  try {
+    const jutsus = await fetchJson(JUTSUS_API);
+    const items = jutsus.map(j => {
+      return `<div>
+                <div><strong>ID:</strong> ${j.id} — <strong>${j.nombre}</strong> (${j.tipo})</div>
+                <div class="muted">Daño: ${j.danio ?? j.chakra ?? "N/A"} · Chakra: ${j.chakra ?? "N/A"}</div>
+              </div>`;
+    });
+    showList("#listaJutsus", items);
+  } catch (e) {
+    alert("Error listando jutsus: " + e.message);
+  }
+}
+
+/* ---------- NINJAS ---------- */
+async function crearNinja() {
+  const nombre = el("#ninjaNombre").value.trim();
+  const rango = el("#ninjaRango").value;
+  const ataque = parseInt(el("#ninjaAtaque").value);
+  const defensa = parseInt(el("#ninjaDefensa").value);
+  const chakra = parseInt(el("#ninjaChakra").value);
+  const aldeaId = el("#ninjaAldea").value || null;
+  if (!nombre || isNaN(ataque) || isNaN(defensa) || isNaN(chakra)) { alert("Completa todos los campos del ninja."); return; }
+
+  // crear ninja primero (sin jutsus)
+  const body = { nombre, rango, ataque, defensa, chakra, aldea: aldeaId ? { id: parseInt(aldeaId) } : null };
+  const created = await fetchJson(NINJAS_API, {
+    method: "POST", headers: { "Content-Type":"application/json" }, body: JSON.stringify(body)
+  });
+
+  // si se seleccionaron jutsus, asignarlos (llamadas separadas)
+  const selectedOptions = Array.from(el("#ninjaJutsus").selectedOptions).map(o => o.value);
+  for (const jId of selectedOptions) {
+    try {
+      const res = await fetch(`${NINJAS_API}/${created.id}/asignar-jutsu/${jId}`, { method: "POST" });
+      if (!res.ok) {
+        const txt = await res.text();
+        console.warn("No se pudo asignar jutsu:", txt);
+      }
+    } catch (e) { console.warn(e); }
+  }
+
+  alert("Ninja creado y jutsus asignados (si se seleccionaron).");
+  el("#ninjaNombre").value = ""; el("#ninjaAtaque").value = ""; el("#ninjaDefensa").value = ""; el("#ninjaChakra").value = "";
+  await listarNinjas(); await listarNinjasFull();
+}
+
+async function listarNinjas() {
+  try {
+    const ninjas = await fetchJson(NINJAS_API);
+    const items = ninjas.map(n => {
+      const aldea = n.aldea ? `${n.aldea.id}:${n.aldea.nombre}` : "Sin aldea";
+      const jutsus = n.jutsus && n.jutsus.length ? n.jutsus.map(j => j.nombre).join(", ") : "Sin jutsus";
+      return `<div>
+                <div><strong>ID:</strong> ${n.id} — <strong>${n.nombre}</strong> (${n.rango})</div>
+                <div class="muted">Aldea: ${aldea} · Chakra:${n.chakra} · Jutsus: ${jutsus}</div>
+              </div>`;
+    });
+    showList("#listaNinjas", items);
+  } catch (e) {
+    alert("Error listando ninjas: " + e.message);
+  }
+}
+
+async function listarNinjasFull() {
+  // idéntico a listarNinjas, pero deja ver más info (se usa al crear por ejemplo)
+  await listarNinjas();
+}
+
+/* ---------- MISIONES ---------- */
+async function crearMision() {
+  const nombre = el("#misionNombre").value.trim();
+  const descripcion = el("#misionDesc").value.trim();
+  const dificultad = el("#misionDificultad").value;
+  const recompensa = parseInt(el("#misionRecompensa").value);
+  if (!nombre || !descripcion || isNaN(recompensa)) { alert("Completa todos los campos de la misión."); return; }
+
+  // rangoMinimo lo determina el servidor según la dificultad
+  await fetchJson(MISIONES_API, {
+    method:"POST", headers: { "Content-Type":"application/json" },
+    body: JSON.stringify({ nombre, descripcion, dificultad, recompensa })
+  });
+  alert("Misión creada.");
+  el("#misionNombre").value = ""; el("#misionDesc").value = ""; el("#misionRecompensa").value = "";
+  await listarMisiones();
+}
+
+async function asignarNinjaAMision() {
+  const mId = el("#asignarMisionId").value;
+  const nId = el("#asignarNinjaId").value;
+  if (!mId || !nId) { alert("Ingresa ambos IDs."); return; }
+  const res = await fetch(`${MISIONES_API}/${mId}/asignar/${nId}`, { method: "POST" });
   if (!res.ok) {
-    showMsg("Error creando misión", "error");
+    // si el backend devuelve JSON con message, intentar parsear
+    try {
+      const body = await res.json();
+      alert("Resultado: " + (body.message || JSON.stringify(body)));
+    } catch (e) {
+      const t = await res.text();
+      alert("Error: " + t);
+    }
     return;
   }
-  showMsg("Misión creada");
-  document.getElementById("misionNombre").value = "";
-  document.getElementById("misionDesc").value = "";
-  document.getElementById("misionRecompensa").value = 100;
-  await loadMisiones();
-  await loadAssignSelects();
+  const data = await res.json(); // Map {success,msg}
+  alert(data.message || (data.success ? "Asignado" : "No asignado"));
+  await listarMisiones();
 }
 
-async function loadMisiones() {
-  const res = await fetch(`${API}/misiones`);
-  if (!res.ok) { showMsg("No se pudieron cargar misiones", "error"); return; }
-  const misiones = await res.json();
-  const ul = document.getElementById("listaMisiones");
-  ul.innerHTML = "";
-  misiones.forEach(m => {
-    const participantes = m.participantes && m.participantes.length ? m.participantes.map(p=>`${p.nombre} (${p.rango})`).join(", ") : "Sin participantes";
-    const li = document.createElement("li");
-    li.className = "card";
-    li.innerHTML = `<div><strong>${m.nombre}</strong> <span class="muted">[${m.dificultad}]</span><br/>
-      <div class="muted">Recompensa: ${m.recompensa} — Rango mínimo: ${m.rangoMinimo ? m.rangoMinimo : "N/A"}</div>
-      <div style="margin-top:8px;"><b>Participantes:</b> ${participantes}</div>
-      <div style="margin-top:8px;">
-        <label>Asignar ninja:</label>
-        <select id="assign_select_${m.id}"><option value="">-- seleccionar ninja --</option></select>
-        <button onclick="assignFromList(${m.id})" class="small">Asignar</button>
-      </div>
-    </div>`;
-    ul.appendChild(li);
-    // fill select with current ninjas
-    fillAssignSelectForMission(m.id);
-  });
+/* listar misiones */
+async function listarMisiones() {
+  try {
+    const misiones = await fetchJson(MISIONES_API);
+    const items = misiones.map(m => {
+      const participantes = m.participantes && m.participantes.length ? m.participantes.map(p => `${p.id}:${p.nombre}`).join(", ") : "Sin participantes";
+      return `<div>
+                <div><strong>ID:</strong> ${m.id} — <strong>${m.nombre}</strong> [${m.dificultad}]</div>
+                <div class="muted">Recompensa: ${m.recompensa} · RangoMin: ${m.rangoMinimo ? m.rangoMinimo : "N/A"}</div>
+                <div>${m.descripcion}</div>
+                <div><small><b>Participantes:</b> ${participantes}</small></div>
+              </div>`;
+    });
+    showList("#listaMisiones", items);
+  } catch (e) {
+    alert("Error listando misiones: " + e.message);
+  }
 }
 
-/* ---------------- ASIGNACION ---------------- */
-async function loadAssignSelects() {
-  // cargar misiones y ninjas into selects
-  const [r1, r2] = await Promise.all([fetch(`${API}/misiones`), fetch(`${API}/ninjas`)]);
-  if (!r1.ok || !r2.ok) return;
-  const misiones = await r1.json();
-  const ninjas = await r2.json();
-
-  const selM = document.getElementById("selectAsignarMision");
-  const selN = document.getElementById("selectAsignarNinja");
-  selM.innerHTML = ""; selN.innerHTML = "";
-  misiones.forEach(m => selM.appendChild(opt(m.id, `${m.id} - ${m.nombre} [${m.dificultad}]`)));
-  ninjas.forEach(n => selN.appendChild(opt(n.id, `${n.id} - ${n.nombre} (${n.rango})`)));
+/* ---------- REPORTES ---------- */
+async function exportarTxt() {
+  const res = await fetch(`${REPORTES_API}/txt`);
+  if (!res.ok) { alert("Error exportando TXT"); return; }
+  const blob = await res.blob();
+  downloadBlob(blob, "reporte_shinobi.txt", "text/plain");
+}
+async function exportarJson() {
+  const res = await fetch(`${REPORTES_API}/json`);
+  if (!res.ok) { alert("Error exportando JSON"); return; }
+  const blob = await res.blob();
+  downloadBlob(blob, "reporte_shinobi.json", "application/json");
+}
+async function exportarXml() {
+  const res = await fetch(`${REPORTES_API}/xml`);
+  if (!res.ok) { alert("Error exportando XML"); return; }
+  const blob = await res.blob();
+  downloadBlob(blob, "reporte_shinobi.xml", "application/xml");
 }
 
-async function fillAssignSelectForMission(misionId) {
-  const res = await fetch(`${API}/ninjas`);
-  if (!res.ok) return;
-  const ninjas = await res.json();
-  const sel = document.getElementById(`assign_select_${misionId}`);
-  if (!sel) return;
-  sel.innerHTML = `<option value="">-- seleccionar ninja --</option>`;
-  ninjas.forEach(n => sel.appendChild(opt(n.id, `${n.id} - ${n.nombre} (${n.rango})`)));
+/* ---------- UTIL: refrescar selects (aldeas, jutsus) ---------- */
+async function refrescarSelects() {
+  // aldeas
+  try {
+    const aldeas = await fetchJson(ALDEAS_API);
+    const sel = el("#ninjaAldea");
+    sel.innerHTML = '<option value="">-- seleccionar --</option>';
+    aldeas.forEach(a => {
+      const opt = document.createElement("option");
+      opt.value = a.id; opt.textContent = `${a.nombre} (${a.nacion})`;
+      sel.appendChild(opt);
+    });
+  } catch(e) { console.warn("No se cargaron aldeas:", e); }
+
+  // jutsus
+  try {
+    const jutsus = await fetchJson(JUTSUS_API);
+    const selJ = el("#ninjaJutsus");
+    selJ.innerHTML = "";
+    jutsus.forEach(j => {
+      const opt = document.createElement("option");
+      opt.value = j.id; opt.textContent = `${j.nombre} — ${j.tipo}`;
+      selJ.appendChild(opt);
+    });
+  } catch(e) { console.warn("No se cargaron jutsus:", e); }
 }
 
-function opt(val, text) { const o = document.createElement("option"); o.value = val; o.textContent = text; return o; }
+/* ---------- INIT: montar listeners ---------- */
+function bind() {
+  el("#btnCrearAldea").addEventListener("click", crearAldea);
+  el("#btnListarAldeas").addEventListener("click", listarAldeas);
 
-document.getElementById("btnAsignar").addEventListener("click", async () => {
-  const mId = document.getElementById("selectAsignarMision").value;
-  const nId = document.getElementById("selectAsignarNinja").value;
-  if (!mId || !nId) { showMsg("Selecciona misión y ninja", "error"); return; }
-  await asignar(mId, nId, true);
+  el("#btnCrearJutsu").addEventListener("click", crearJutsu);
+  el("#btnListarJutsus").addEventListener("click", listarJutsus);
+
+  el("#btnCrearNinja").addEventListener("click", crearNinja);
+  el("#btnListarNinjas").addEventListener("click", listarNinjas);
+  el("#btnListarNinjasFull").addEventListener("click", listarNinjasFull);
+
+  el("#btnCrearMision").addEventListener("click", crearMision);
+  el("#btnListarMisiones").addEventListener("click", listarMisiones);
+  el("#btnAsignarNinjaMision").addEventListener("click", asignarNinjaAMision);
+
+  el("#btnExportTxt").addEventListener("click", exportarTxt);
+  el("#btnExportJson").addEventListener("click", exportarJson);
+  el("#btnExportXml").addEventListener("click", exportarXml);
+
+  el("#btnRefrescarSelects").addEventListener("click", refrescarSelects);
+}
+
+/* ---------- START ---------- */
+window.addEventListener("DOMContentLoaded", async () => {
+  bind();
+  await refrescarSelects();
+  // pre-carga opcional de listas
+  await listarAldeas();
+  await listarJutsus();
+  await listarNinjas();
+  await listarMisiones();
 });
-
-async function assignFromList(misionId) {
-  const sel = document.getElementById(`assign_select_${misionId}`);
-  if (!sel) return;
-  const ninjaId = sel.value;
-  if (!ninjaId) { showMsg("Selecciona un ninja", "error"); return; }
-  await asignar(misionId, ninjaId, false);
-}
-
-async function asignar(misionId, ninjaId, mostrarPanel) {
-  try {
-    const res = await fetch(`${API}/misiones/${misionId}/asignar/${ninjaId}`, { method: "POST" });
-    const data = await res.json();
-    // backend retorna { success: boolean, message: "..." }
-    if (data.success) {
-      showMsg(data.message || "Asignado correctamente", "notice");
-    } else {
-      showMsg(data.message || "No se pudo asignar (reglas)", "error");
-    }
-    document.getElementById("assignResult").innerText = data.message || "";
-    await loadMisiones();
-    await loadNinjas();
-    await loadAldeas();
-    await loadAssignSelects();
-  } catch (e) {
-    showMsg("Error al asignar: " + e.message, "error");
-  }
-}
-
-/* ---------------- EXPORTES ---------------- */
-async function exportar(formato) {
-  try {
-    const res = await fetch(`${API}/export/${formato}`);
-    if (!res.ok) { showMsg("Error generando reporte", "error"); return; }
-    const blob = await res.blob();
-    const filename = `reporte.${formato}`;
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-    showMsg("Reporte descargado: " + filename, "notice");
-  } catch (e) {
-    showMsg("Error exportando: " + e.message, "error");
-  }
-}
-
-/* ---------------- HELPERS / INICIALIZACION ---------------- */
-async function loadAldeaSelects() {
-  // load aldeas into ninjaAldea select
-  const res = await fetch(`${API}/aldeas`);
-  if (!res.ok) return;
-  const aldeas = await res.json();
-  const sel = document.getElementById("ninjaAldea");
-  sel.innerHTML = `<option value="">-- Selecciona aldea --</option>`;
-  aldeas.forEach(a => sel.appendChild(opt(a.id, a.nombre)));
-}
-
-async function initialLoad() {
-  await loadAldeas();
-  await loadAldeaSelects();
-  await loadNinjas();
-  await loadMisiones();
-  await loadAssignSelects();
-}
-
-initialLoad();

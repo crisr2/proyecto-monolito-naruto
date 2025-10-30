@@ -3,6 +3,8 @@ import com.tomates.naruto.entity.Ninja;
 import com.tomates.naruto.service.NinjaService;
 import com.tomates.naruto.repository.AldeaRepository;
 import com.tomates.naruto.entity.Aldea;
+import com.tomates.naruto.repository.JutsuRepository;
+import com.tomates.naruto.entity.Jutsu;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -13,10 +15,12 @@ public class NinjaController {
 
     private final NinjaService ninjaService;
     private final AldeaRepository aldeaRepository;
+    private final JutsuRepository jutsuRepository;
 
-    public NinjaController(NinjaService ninjaService, AldeaRepository aldeaRepository) {
+    public NinjaController(NinjaService ninjaService, AldeaRepository aldeaRepository, JutsuRepository jutsuRepository) {
         this.ninjaService = ninjaService;
         this.aldeaRepository = aldeaRepository;
+        this.jutsuRepository = jutsuRepository;
     }
 
     @GetMapping
@@ -52,5 +56,28 @@ public class NinjaController {
     @DeleteMapping("/{id}")
     public void eliminar(@PathVariable Long id) {
         ninjaService.eliminar(id);
+    }
+
+    @PostMapping("/{ninjaId}/asignar-jutsu/{jutsuId}")
+    public Ninja asignarJutsu(@PathVariable Long ninjaId, @PathVariable Long jutsuId) {
+        Ninja ninja = ninjaService.obtenerPorId(ninjaId);
+        if (ninja == null) {
+            throw new RuntimeException("Ninja no encontrado");
+        }
+
+        Jutsu jutsu = jutsuRepository.findById(jutsuId)
+                .orElseThrow(() -> new RuntimeException("Jutsu no encontrado"));
+
+        // Inicializar la lista si es nula
+        if (ninja.getJutsus() == null) {
+            ninja.setJutsus(new java.util.ArrayList<>());
+        }
+
+        // Evitar duplicados
+        if (!ninja.getJutsus().contains(jutsu)) {
+            ninja.getJutsus().add(jutsu);
+        }
+
+        return ninjaService.guardar(ninja);
     }
 }

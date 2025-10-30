@@ -1,5 +1,5 @@
 package com.tomates.naruto.entity;
-
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.tomates.naruto.entity.enums.RangoNinja;
 import jakarta.persistence.*;
 import java.util.List;
@@ -16,6 +16,7 @@ public class Ninja {
     private int chakra;
 
     @ManyToOne
+    @JsonBackReference
     private Aldea aldea;
 
     @OneToMany(cascade = CascadeType.ALL)
