@@ -64,7 +64,7 @@ public class ReportService {
         // ---- MISIONES ----
         sb.append("\nMISIONES:\n");
         for (Mision m : misionRepository.findAll()) {
-            sb.append("- ").append(m.getNombre()).append(" [").append(m.getDificultad()).append("]\n");
+            sb.append("- ").append(m.getNombre()).append(" [").append(m.getRango()).append("]\n");
             sb.append("   Descripción: ").append(m.getDescripcion()).append("\n");
             sb.append("   Recompensa: ").append(m.getRecompensa()).append("\n");
 

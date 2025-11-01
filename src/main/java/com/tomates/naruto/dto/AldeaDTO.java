@@ -8,15 +8,15 @@ public class AldeaDTO {
     private String nacion;
     private List<String> ninjas; // Solo los nombres o IDs
 
-    public AldeaDTO(Long id, String nombre, String nacion, List<String> ninjas) {
-        this.id = id;
-        this.nombre = nombre;
-        this.nacion = nacion;
-        this.ninjas = ninjas;
-    }
-
+    
+    // Getters y Setters
+    
     public Long getId() { return id; }
+    public Long setId(Long id) { return this.id = id; }
     public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
     public String getNacion() { return nacion; }
+    public void setNacion(String nacion) { this.nacion = nacion; }
     public List<String> getNinjas() { return ninjas; }
+    public void setNinjas(List<String> ninjas) { this.ninjas = ninjas; }
 }

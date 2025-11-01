@@ -19,7 +19,13 @@ public class Ninja {
     @JsonBackReference
     private Aldea aldea;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @ManyToMany
+    @JoinTable(
+        name = "ninja_jutsus",
+        joinColumns = @JoinColumn(name = "ninja_id"),
+        inverseJoinColumns = @JoinColumn(name = "jutsu_id"),
+        uniqueConstraints = @UniqueConstraint(columnNames = {"ninja_id", "jutsu_id"})
+    )
     private List<Jutsu> jutsus;
 
     // Getters y Setters

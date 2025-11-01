@@ -1,9 +1,16 @@
 package com.tomates.naruto.entity;
-import com.tomates.naruto.entity.enums.RangoMision;
-import com.tomates.naruto.entity.enums.RangoNinja;
-import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.tomates.naruto.entity.enums.RangoMision;
+import com.tomates.naruto.entity.enums.RangoNinja;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 
 @Entity
 public class Mision {
@@ -12,7 +19,7 @@ public class Mision {
     private String nombre;
     private String descripcion;
     @Enumerated(EnumType.STRING)
-    private RangoMision dificultad;
+    private RangoMision rango;
     private int recompensa;
     @Enumerated(EnumType.STRING)
     private RangoNinja rangoMinimo;
@@ -40,11 +47,11 @@ public class Mision {
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
     }
-    public RangoMision getDificultad() {
-        return dificultad;
+    public RangoMision getRango() {
+        return rango;
     }
-    public void setDificultad(RangoMision dificultad) {
-        this.dificultad = dificultad;
+    public void setRango(RangoMision rango) {
+        this.rango = rango;
     }
     public int getRecompensa() {
         return recompensa;

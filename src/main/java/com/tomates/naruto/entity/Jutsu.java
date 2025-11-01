@@ -1,4 +1,6 @@
 package com.tomates.naruto.entity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import java.util.List;
 import jakarta.persistence.*;
 
 @Entity
@@ -10,6 +12,10 @@ public class Jutsu {
     private int danio; 
     private int chakra;
     
+    @ManyToMany(mappedBy = "jutsus")
+    @JsonBackReference
+    private List<Ninja> ninjas;
+
     // Getters y Setters
 
     public Long getId() {
@@ -30,7 +36,7 @@ public class Jutsu {
     public void setTipo(String tipo) {
         this.tipo = tipo;
     }
-    public int getdanio() {
+    public int getDanio() {
         return danio;
     }
     public void setdanio(int danio) { 

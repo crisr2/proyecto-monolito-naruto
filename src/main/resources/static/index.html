@@ -2,27 +2,52 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Naruto Monolito - Panel Administrativo</title>
+<title>Aplicación Naruto Monolito</title>
 <style>
   body { font-family: Arial; background: #f5f5f5; margin: 20px; }
+  h1, h2 { color: #222; }
   h2 { background: #222; color: #fff; padding: 8px; border-radius: 6px; }
   section { background: white; padding: 15px; border-radius: 6px; margin-bottom: 20px; box-shadow: 0 0 5px #aaa; }
   label { display: block; margin-top: 5px; }
   input, select, textarea { width: 100%; margin-bottom: 8px; padding: 5px; }
   button { background: #007bff; color: white; padding: 6px 12px; border: none; border-radius: 5px; cursor: pointer; }
   button:hover { background: #0056b3; }
-  pre { background: #eee; padding: 10px; border-radius: 6px; overflow-x: auto; }
+  .item { border-bottom: 1px solid #ddd; padding: 8px 0; }
+  .item:last-child { border-bottom: none; }
 </style>
 </head>
 <body>
 
-<h1>Aplicación Monolitica Gestión de Ninjas</h1>
+<h1>- Aplicación Monolítica de Gestión Ninja -</h1>
 
 <!-- ================== ALDEAS ================== -->
 <section id="aldeas">
   <h2>Aldeas</h2>
-  <button onclick="listarAldeas()">Listar Aldeas</button>
-  <pre id="listaAldeas"></pre>
+  <button onclick="listarAldeas()">Actualizar Aldeas</button>
+  <div id="listaAldeas"></div>
+</section>
+
+<!-- ================== JUTSUS ================== -->
+<section id="jutsus">
+  <h2>Jutsus</h2>
+  <form id="formJutsu">
+    <label>Nombre:</label>
+    <input type="text" id="jutsuNombre" required>
+
+    <label>Tipo:</label>
+    <input type="text" id="jutsuTipo" required>
+
+    <label>Daño:</label>
+    <input type="number" id="jutsuDanio" required>
+
+    <label>Chakra:</label>
+    <input type="number" id="jutsuChakra" required>
+
+    <button type="submit">Registrar Jutsu</button>
+  </form>
+
+  <button onclick="listarJutsus()">Listar Jutsus</button>
+  <div id="listaJutsus"></div>
 </section>
 
 <!-- ================== NINJAS ================== -->
@@ -55,39 +80,16 @@
   </form>
 
   <button onclick="listarNinjas()">Listar Ninjas</button>
-  <pre id="listaNinjas"></pre>
+  <div id="listaNinjas"></div>
 
   <h3>Asignar Jutsu a Ninja</h3>
   <label>Ninja:</label>
-  <select id="ninjaSelect"></select>
+  <select id="ninjaSelectJutsu"></select>
 
   <label>Jutsu:</label>
   <select id="jutsuSelect"></select>
 
   <button onclick="asignarJutsu()">Asignar</button>
-</section>
-
-<!-- ================== JUTSUS ================== -->
-<section id="jutsus">
-  <h2>Jutsus</h2>
-  <form id="formJutsu">
-    <label>Nombre:</label>
-    <input type="text" id="jutsuNombre" required>
-
-    <label>Tipo:</label>
-    <input type="text" id="jutsuTipo" required>
-
-    <label>Daño:</label>
-    <input type="number" id="jutsuDanio" required>
-
-    <label>Chakra:</label>
-    <input type="number" id="jutsuChakra" required>
-
-    <button type="submit">Registrar Jutsu</button>
-  </form>
-
-  <button onclick="listarJutsus()">Listar Jutsus</button>
-  <pre id="listaJutsus"></pre>
 </section>
 
 <!-- ================== MISIONES ================== -->
@@ -123,22 +125,22 @@
   </form>
 
   <button onclick="listarMisiones()">Listar Misiones</button>
-  <pre id="listaMisiones"></pre>
-  
+  <div id="listaMisiones"></div>
+
   <h3>Asignar Ninja a Misión</h3>
   <label>Misión:</label>
-  <select id="misionSelect"></select>
+  <select id="misionSelectMision"></select>
 
   <label>Ninja:</label>
-  <select id="ninjaSelect"></select>
+  <select id="ninjaSelectMision"></select>
 
-  <button onclick="asignarNinja()">Asignar</button>
-
+  <button onclick="asignarNinjaAMision()">Asignar</button>
+  <div id="resultadoAsignacion"></div>
 </section>
 
 <!-- ================== REPORTES ================== -->
 <section id="reportes">
-  <h2>Reportes</h2>
+  <h2>Generar Reportes</h2>
   <button onclick="exportar('txt')">Exportar TXT</button>
   <button onclick="exportar('json')">Exportar JSON</button>
   <button onclick="exportar('xml')">Exportar XML</button>
@@ -147,13 +149,19 @@
 <script>
 const api = '/api';
 
-
 // ================== ALDEAS ==================
 async function listarAldeas() {
   const res = await fetch(`${api}/aldeas`);
   const data = await res.json();
-  document.getElementById('listaAldeas').textContent = JSON.stringify(data, null, 2);
-  // Cargar aldeas en select de ninjas
+
+  const contenedor = document.getElementById('listaAldeas');
+  contenedor.innerHTML = data.map(a => `
+    <div class="item">
+      <strong>${a.nombre}</strong> — <em>${a.nacion}</em><br>
+      Ninjas: ${a.ninjas && a.ninjas.length ? a.ninjas.join(', ') : 'Sin ninjas registrados'}
+    </div>
+  `).join('');
+
   const sel = document.getElementById('ninjaAldea');
   sel.innerHTML = '';
   data.forEach(a => {
@@ -182,32 +190,37 @@ document.getElementById('formNinja').addEventListener('submit', async e => {
 async function listarNinjas() {
   const res = await fetch(`${api}/ninjas`);
   const data = await res.json();
-  document.getElementById('listaNinjas').textContent = JSON.stringify(data, null, 2);
-  // Actualizar dropdown para asignar jutsus
-  const sel = document.getElementById('ninjaSelect');
-  sel.innerHTML = '';
+
+  const contenedor = document.getElementById('listaNinjas');
+  contenedor.innerHTML = data.map(n => `
+    <div class="item">
+      <strong>${n.nombre}</strong> (${n.rango})<br>
+      Aldea: ${n.aldeaNombre ? n.aldeaNombre : 'Sin aldea'}<br>
+      Ataque: ${n.ataque}, Defensa: ${n.defensa}, Chakra: ${n.chakra}<br>
+      Jutsus: ${n.jutsus && n.jutsus.length ? n.jutsus.join(', ') : 'Ninguno'}
+    </div>
+  `).join('');
+
+  // Actualizar dropdowns
+  const selJutsu = document.getElementById('ninjaSelectJutsu');
+  const selMision = document.getElementById('ninjaSelectMision');
+  selJutsu.innerHTML = '';
+  selMision.innerHTML = '';
   data.forEach(n => {
-    const opt = document.createElement('option');
-    opt.value = n.id;
-    opt.textContent = n.nombre + ' (' + n.rango + ')';
-    sel.appendChild(opt);
+    const opt1 = document.createElement('option');
+    opt1.value = n.id;
+    opt1.textContent = n.nombre + ' (' + n.rango + ')';
+    selJutsu.appendChild(opt1);
+    selMision.appendChild(opt1.cloneNode(true));
   });
 }
 
 async function asignarJutsu() {
-  const ninjaId = ninjaSelect.value;
+  const ninjaId = ninjaSelectJutsu.value;
   const jutsuId = jutsuSelect.value;
   await fetch(`${api}/ninjas/${ninjaId}/asignar-jutsu/${jutsuId}`, { method: 'POST' });
   alert('Jutsu asignado correctamente');
   listarNinjas();
-}
-
-async function asignarNinja() {
-  const ninjaId = ninjaSelect.value;
-  const misionId = misionSelect.value;
-  await fetch(`${api}/misiones/{misionId}/asignar/{ninjaId}`, { method: 'POST' });
-  alert('Ninja asignado correctamente');
-  listarMisiones();
 }
 
 // ================== JUTSUS ==================
@@ -226,8 +239,14 @@ document.getElementById('formJutsu').addEventListener('submit', async e => {
 async function listarJutsus() {
   const res = await fetch(`${api}/jutsus`);
   const data = await res.json();
-  document.getElementById('listaJutsus').textContent = JSON.stringify(data, null, 2);
-  // Actualizar dropdown para asignar jutsus
+  const contenedor = document.getElementById('listaJutsus');
+  contenedor.innerHTML = data.map(j => `
+    <div class="item">
+      <strong>${j.nombre}</strong> (${j.tipo})<br>
+      Daño: ${j.danio}, Chakra: ${j.chakra}
+    </div>
+  `).join('');
+
   const sel = document.getElementById('jutsuSelect');
   sel.innerHTML = '';
   data.forEach(j => {
@@ -244,7 +263,7 @@ document.getElementById('formMision').addEventListener('submit', async e => {
   const body = {
     nombre: misionNombre.value,
     descripcion: misionDescripcion.value,
-    rango: misionRango.value,
+    rango: misionRango.value, 
     recompensa: parseInt(misionRecompensa.value),
     rangoMinimo: misionRangoMin.value
   };
@@ -255,9 +274,19 @@ document.getElementById('formMision').addEventListener('submit', async e => {
 async function listarMisiones() {
   const res = await fetch(`${api}/misiones`);
   const data = await res.json();
-  document.getElementById('listaMisiones').textContent = JSON.stringify(data, null, 2);
-  // Actualizar dropdown para asignar ninjas
-  const sel = document.getElementById('misionSelect');
+
+  const contenedor = document.getElementById('listaMisiones');
+  contenedor.innerHTML = data.map(m => `
+    <div class="item">
+      <strong>${m.nombre}</strong> — Rango ${m.rango}<br>
+      Descripción: ${m.descripcion}<br>
+      Recompensa: ${m.recompensa} ryō<br>
+      Rango mínimo: ${m.rangoMinimo}<br>
+      Participantes: ${m.participantes && m.participantes.length ? m.participantes.join(', ') : 'Sin participantes'}
+    </div>
+  `).join('');
+
+  const sel = document.getElementById('misionSelectMision');
   sel.innerHTML = '';
   data.forEach(m => {
     const opt = document.createElement('option');
@@ -265,6 +294,19 @@ async function listarMisiones() {
     opt.textContent = m.nombre + ' (' + m.rango + ')';
     sel.appendChild(opt);
   });
+}
+
+async function asignarNinjaAMision() {
+  const misionId = misionSelectMision.value;
+  const ninjaId = ninjaSelectMision.value;
+  const res = await fetch(`${api}/misiones/${misionId}/asignar/${ninjaId}`, { method: 'POST' });
+  if (res.ok) {
+    document.getElementById('resultadoAsignacion').textContent = 'Ninja asignado correctamente';
+  } else {
+    const text = await res.text();
+    document.getElementById('resultadoAsignacion').textContent = 'Error: ' + text;
+  }
+  listarMisiones();
 }
 
 // ================== REPORTES ==================
@@ -278,6 +320,5 @@ listarJutsus();
 listarNinjas();
 listarMisiones();
 </script>
-
 </body>
 </html>
