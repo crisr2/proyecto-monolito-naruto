@@ -13,11 +13,11 @@ public class JutsuService {
         this.jutsuRepository = jutsuRepository;
     }
 
-    public Jutsu guardar(Jutsu jutsu) {
+    public Jutsu registrarJutsu(Jutsu jutsu) {
         return jutsuRepository.save(jutsu);
     }
 
-    public List<Jutsu> obtenerTodos() {
+    public List<Jutsu> listarJutsus() {
         return jutsuRepository.findAll();
     }
 

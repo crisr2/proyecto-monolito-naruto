@@ -18,16 +18,18 @@
 </head>
 <body>
 
-<h1>- Aplicación Monolítica de Gestión Ninja -</h1>
+<h1>-- Aplicación Monolítica de Gestión Ninja --</h1>
 
-<!-- ================== ALDEAS ================== -->
+<!-- ================== BOTONES Y LAYOUTS ================== -->
+
+<!-- Aldeas -->
 <section id="aldeas">
   <h2>Aldeas</h2>
   <button onclick="listarAldeas()">Actualizar Aldeas</button>
   <div id="listaAldeas"></div>
 </section>
 
-<!-- ================== JUTSUS ================== -->
+<!-- Jutsus -->
 <section id="jutsus">
   <h2>Jutsus</h2>
   <form id="formJutsu">
@@ -45,12 +47,11 @@
 
     <button type="submit">Registrar Jutsu</button>
   </form>
-
   <button onclick="listarJutsus()">Listar Jutsus</button>
   <div id="listaJutsus"></div>
 </section>
 
-<!-- ================== NINJAS ================== -->
+<!-- Ninjas -->
 <section id="ninjas">
   <h2>Ninjas</h2>
   <form id="formNinja">
@@ -78,7 +79,7 @@
 
     <button type="submit">Registrar Ninja</button>
   </form>
-
+  
   <button onclick="listarNinjas()">Listar Ninjas</button>
   <div id="listaNinjas"></div>
 
@@ -92,7 +93,7 @@
   <button onclick="asignarJutsu()">Asignar</button>
 </section>
 
-<!-- ================== MISIONES ================== -->
+<!-- Misiones -->
 <section id="misiones">
   <h2>Misiones</h2>
   <form id="formMision">
@@ -123,7 +124,7 @@
 
     <button type="submit">Registrar Misión</button>
   </form>
-
+  
   <button onclick="listarMisiones()">Listar Misiones</button>
   <div id="listaMisiones"></div>
 
@@ -138,7 +139,7 @@
   <div id="resultadoAsignacion"></div>
 </section>
 
-<!-- ================== REPORTES ================== -->
+<!-- Reportes -->
 <section id="reportes">
   <h2>Generar Reportes</h2>
   <button onclick="exportar('txt')">Exportar TXT</button>
@@ -149,7 +150,9 @@
 <script>
 const api = '/api';
 
-// ================== ALDEAS ==================
+// ================== FUNCIONES ==================
+
+// ---- Aldeas ----
 async function listarAldeas() {
   const res = await fetch(`${api}/aldeas`);
   const data = await res.json();
@@ -172,58 +175,7 @@ async function listarAldeas() {
   });
 }
 
-// ================== NINJAS ==================
-document.getElementById('formNinja').addEventListener('submit', async e => {
-  e.preventDefault();
-  const body = {
-    nombre: ninjaNombre.value,
-    rango: ninjaRango.value,
-    ataque: parseInt(ninjaAtaque.value),
-    defensa: parseInt(ninjaDefensa.value),
-    chakra: parseInt(ninjaChakra.value),
-    aldea: { id: parseInt(ninjaAldea.value) }
-  };
-  await fetch(`${api}/ninjas`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-  listarNinjas();
-});
-
-async function listarNinjas() {
-  const res = await fetch(`${api}/ninjas`);
-  const data = await res.json();
-
-  const contenedor = document.getElementById('listaNinjas');
-  contenedor.innerHTML = data.map(n => `
-    <div class="item">
-      <strong>${n.nombre}</strong> (${n.rango})<br>
-      Aldea: ${n.aldeaNombre ? n.aldeaNombre : 'Sin aldea'}<br>
-      Ataque: ${n.ataque}, Defensa: ${n.defensa}, Chakra: ${n.chakra}<br>
-      Jutsus: ${n.jutsus && n.jutsus.length ? n.jutsus.join(', ') : 'Ninguno'}
-    </div>
-  `).join('');
-
-  // Actualizar dropdowns
-  const selJutsu = document.getElementById('ninjaSelectJutsu');
-  const selMision = document.getElementById('ninjaSelectMision');
-  selJutsu.innerHTML = '';
-  selMision.innerHTML = '';
-  data.forEach(n => {
-    const opt1 = document.createElement('option');
-    opt1.value = n.id;
-    opt1.textContent = n.nombre + ' (' + n.rango + ')';
-    selJutsu.appendChild(opt1);
-    selMision.appendChild(opt1.cloneNode(true));
-  });
-}
-
-async function asignarJutsu() {
-  const ninjaId = ninjaSelectJutsu.value;
-  const jutsuId = jutsuSelect.value;
-  await fetch(`${api}/ninjas/${ninjaId}/asignar-jutsu/${jutsuId}`, { method: 'POST' });
-  alert('Jutsu asignado correctamente');
-  listarNinjas();
-}
-
-// ================== JUTSUS ==================
+// ---- Jutsus ----
 document.getElementById('formJutsu').addEventListener('submit', async e => {
   e.preventDefault();
   const body = {
@@ -232,7 +184,8 @@ document.getElementById('formJutsu').addEventListener('submit', async e => {
     danio: parseInt(jutsuDanio.value),
     chakra: parseInt(jutsuChakra.value)
   };
-  await fetch(`${api}/jutsus`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const res = await fetch(`${api}/jutsus`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  alert(res.ok ? 'Jutsu registrado correctamente' : 'Error al registrar el jutsu');
   listarJutsus();
 });
 
@@ -257,7 +210,65 @@ async function listarJutsus() {
   });
 }
 
-// ================== MISIONES ==================
+// ---- Ninjas ----
+document.getElementById('formNinja').addEventListener('submit', async e => {
+  e.preventDefault();
+  const body = {
+    nombre: ninjaNombre.value,
+    rango: ninjaRango.value,
+    ataque: parseInt(ninjaAtaque.value),
+    defensa: parseInt(ninjaDefensa.value),
+    chakra: parseInt(ninjaChakra.value),
+    aldea: { id: parseInt(ninjaAldea.value) }
+  };
+  const res = await fetch(`${api}/ninjas`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  alert(res.ok ? 'Ninja registrado correctamente' : 'Error al registrar el ninja');
+  listarNinjas();
+});
+
+async function listarNinjas() {
+  const res = await fetch(`${api}/ninjas`);
+  const data = await res.json();
+
+  const contenedor = document.getElementById('listaNinjas');
+  contenedor.innerHTML = data.map(n => `
+    <div class="item">
+      <strong>${n.nombre}</strong> (${n.rango})<br>
+      Aldea: ${n.aldeaNombre ? n.aldeaNombre : 'Sin aldea'}<br>
+      Ataque: ${n.ataque}, Defensa: ${n.defensa}, Chakra: ${n.chakra}<br>
+      Jutsus: ${n.jutsus && n.jutsus.length ? n.jutsus.join(', ') : 'Ninguno'}
+    </div>
+  `).join('');
+
+  // Guardar valores actuales para no resetear selección
+  const selJutsu = document.getElementById('ninjaSelectJutsu');
+  const currentNinjaJutsu = selJutsu.value;
+  const selMision = document.getElementById('ninjaSelectMision');
+  const currentNinjaMision = selMision.value;
+
+  selJutsu.innerHTML = '';
+  selMision.innerHTML = '';
+  data.forEach(n => {
+    const opt1 = document.createElement('option');
+    opt1.value = n.id;
+    opt1.textContent = n.nombre + ' (' + n.rango + ')';
+    selJutsu.appendChild(opt1);
+    selMision.appendChild(opt1.cloneNode(true));
+  });
+
+  if (currentNinjaJutsu) selJutsu.value = currentNinjaJutsu;
+  if (currentNinjaMision) selMision.value = currentNinjaMision;
+}
+
+async function asignarJutsu() {
+  const ninjaId = ninjaSelectJutsu.value;
+  const jutsuId = jutsuSelect.value;
+  const res = await fetch(`${api}/ninjas/${ninjaId}/${jutsuId}`, { method: 'POST' });
+  alert(res.ok ? 'Jutsu asignado correctamente' : 'Error al asignar el jutsu');
+  listarNinjas();
+}
+
+// ---- Misiones ----
 document.getElementById('formMision').addEventListener('submit', async e => {
   e.preventDefault();
   const body = {
@@ -267,7 +278,8 @@ document.getElementById('formMision').addEventListener('submit', async e => {
     recompensa: parseInt(misionRecompensa.value),
     rangoMinimo: misionRangoMin.value
   };
-  await fetch(`${api}/misiones`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const res = await fetch(`${api}/misiones`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  alert(res.ok ? 'Misión registrada correctamente' : 'Error al registrar la misión');
   listarMisiones();
 });
 
@@ -280,13 +292,14 @@ async function listarMisiones() {
     <div class="item">
       <strong>${m.nombre}</strong> — Rango ${m.rango}<br>
       Descripción: ${m.descripcion}<br>
-      Recompensa: ${m.recompensa} ryō<br>
+      Recompensa: ${m.recompensa} monedas ninja<br>
       Rango mínimo: ${m.rangoMinimo}<br>
       Participantes: ${m.participantes && m.participantes.length ? m.participantes.join(', ') : 'Sin participantes'}
     </div>
   `).join('');
 
   const sel = document.getElementById('misionSelectMision');
+  const currentMission = sel.value;
   sel.innerHTML = '';
   data.forEach(m => {
     const opt = document.createElement('option');
@@ -294,22 +307,30 @@ async function listarMisiones() {
     opt.textContent = m.nombre + ' (' + m.rango + ')';
     sel.appendChild(opt);
   });
+  if (currentMission) sel.value = currentMission;
 }
 
 async function asignarNinjaAMision() {
   const misionId = misionSelectMision.value;
   const ninjaId = ninjaSelectMision.value;
-  const res = await fetch(`${api}/misiones/${misionId}/asignar/${ninjaId}`, { method: 'POST' });
-  if (res.ok) {
-    document.getElementById('resultadoAsignacion').textContent = 'Ninja asignado correctamente';
-  } else {
-    const text = await res.text();
-    document.getElementById('resultadoAsignacion').textContent = 'Error: ' + text;
-  }
-  listarMisiones();
-}
 
-// ================== REPORTES ==================
+  try {
+      const res = await fetch(`${api}/misiones/${misionId}/${ninjaId}`, { method: 'POST' });
+
+      if (res.ok) {
+        alert('Ninja asignado correctamente');
+      } else {
+        const text = await res.text();
+        alert('Error al asignar ninja a la misión:\n\n' + text);
+      }
+    } catch (err) {
+      alert('Error de conexión o inesperado:\n\n' + err);
+    }
+
+    listarMisiones();
+  }
+
+// ---- Reportes ----
 function exportar(tipo) {
   window.open(`${api}/reportes/${tipo}`, '_blank');
 }

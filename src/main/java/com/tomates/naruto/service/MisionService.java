@@ -19,48 +19,42 @@ public class MisionService {
         this.ninjaRepository = ninjaRepository;
     }
 
-    // Listar todas las misiones
-    public List<Mision> obtenerTodas() {
+    public List<Mision> listarMisiones() {
         return misionRepository.findAll();
     }
 
-    // Obtener una misión por ID
-    public Mision obtenerPorId(Long id) {
+    public Mision obtenerMision(Long id) {
         return misionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Misión no encontrada con ID: " + id));
     }
 
-    // Crear misión nueva
-    public Mision guardar(Mision mision) {
-        // Asignar rango mínimo automáticamente según dificultad
+    public Mision registrarMision(Mision mision) {
         if (mision.getRango() != null) {
             mision.setRangoMinimo(mision.getRango().rangoMinimoPorMision());
         }
         return misionRepository.save(mision);
     }
 
-    // Eliminar misión
-    public void eliminar(Long id) {
+    public void eliminarMision(Long id) {
         misionRepository.deleteById(id);
     }
 
-    // Reglas para asignar ninja a una misión 
     public Mision asignarNinja(Long misionId, Long ninjaId) {
-        Mision mision = obtenerPorId(misionId);
+        Mision mision = obtenerMision(misionId);
         Ninja ninja = ninjaRepository.findById(ninjaId)
                 .orElseThrow(() -> new RuntimeException("Ninja no encontrado con ID: " + ninjaId));
 
-        // Regla 1: máximo 3 participantes
+        // Regla 1: Máximo 3 participantes
         if (mision.getParticipantes().size() >= 3) {
             throw new RuntimeException("La misión ya tiene el máximo de 3 participantes.");
         }
 
-        // Regla 2: validar rango mínimo
+        // Regla 2: Validar rango mínimo
         if (ninja.getRango().ordinal() < mision.getRangoMinimo().ordinal()) {
             throw new RuntimeException("El rango del ninja es demasiado bajo para esta misión.");
         }
 
-        // Regla 3: si misión C, un Genin sólo puede participar si hay un Jonin
+        // Regla 3: Si misión tiene rango C, un Genin sólo puede participar si hay un Jonin
         if (mision.getRango() == RangoMision.C && ninja.getRango() == RangoNinja.GENIN) {
             boolean hayJonin = mision.getParticipantes()
                     .stream()
@@ -70,12 +64,11 @@ public class MisionService {
             }
         }
 
-        // Regla 4: evitar duplicar ninja
+        // Regla 4: Evitar duplicar ninjas
         if (mision.getParticipantes().contains(ninja)) {
             throw new RuntimeException("Este ninja ya está asignado a la misión.");
         }
 
-        // Tras validar, asignar ninja a la misión
         mision.getParticipantes().add(ninja);
         return misionRepository.save(mision);
     }

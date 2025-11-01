@@ -17,7 +17,7 @@ public class JutsuController {
 
     @GetMapping
     public List<Jutsu> listarTodos() {
-        return jutsuService.obtenerTodos();
+        return jutsuService.listarJutsus();
     }
 
     @GetMapping("/{id}")
@@ -27,7 +27,7 @@ public class JutsuController {
 
     @PostMapping
     public Jutsu crear(@RequestBody Jutsu jutsu) {
-        return jutsuService.guardar(jutsu);
+        return jutsuService.registrarJutsu(jutsu);
     }
 
     @DeleteMapping("/{id}")

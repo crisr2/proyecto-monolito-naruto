@@ -16,6 +16,7 @@ public class Ninja {
     private int chakra;
 
     @ManyToOne
+    @JoinColumn(name = "aldea_id")
     @JsonBackReference
     private Aldea aldea;
 
@@ -29,53 +30,29 @@ public class Ninja {
     private List<Jutsu> jutsus;
 
     // Getters y Setters
-    public Long getId() {
-        return id;
-    }
-    public void setId(Long id) {
-        this.id = id;
-    }
-    public String getNombre() {
-        return nombre;
-    }
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-    public RangoNinja getRango() {
-        return rango;
-    }
-    public void setRango(RangoNinja rango) {
-        this.rango = rango;
-    }
-    public int getAtaque() {
-        return ataque;
-    }
-    public void setAtaque(int ataque) {
-        this.ataque = ataque;
-    }
-    public int getDefensa() {
-        return defensa;
-    }
-    public void setDefensa(int defensa) {
-        this.defensa = defensa;
-    }
-    public int getChakra() {
-        return chakra;
-    }
-    public void setChakra(int chakra) {
-        this.chakra = chakra;
-    }
-    public Aldea getAldea() {
-        return aldea;
-    }
-    public void setAldea(Aldea aldea) {
-        this.aldea = aldea;
-    }
-    public List<Jutsu> getJutsus() {
-        return jutsus;
-    }
-    public void setJutsus(List<Jutsu> jutsus) {
-        this.jutsus = jutsus;
-    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+
+    public RangoNinja getRango() { return rango; }
+    public void setRango(RangoNinja rango) { this.rango = rango; }
+    
+    public int getAtaque() { return ataque; }
+    public void setAtaque(int ataque) { this.ataque = ataque; }
+
+    public int getDefensa() { return defensa; }
+    public void setDefensa(int defensa) { this.defensa = defensa; }
+    
+    public int getChakra() { return chakra; }
+    public void setChakra(int chakra) { this.chakra = chakra; }
+
+    public Aldea getAldea() { return aldea; }
+    public void setAldea(Aldea aldea) { this.aldea = aldea; }
+
+    public List<Jutsu> getJutsus() {return jutsus; }
+    public void setJutsus(List<Jutsu> jutsus) { this.jutsus = jutsus; }
 
 }

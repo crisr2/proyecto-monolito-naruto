@@ -1,5 +1,4 @@
 package com.tomates.naruto;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -8,6 +7,6 @@ public class NarutoApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(NarutoApplication.class, args);
-        System.out.println("Servidor Aplicación Ninjas iniciada en http://localhost:8080/");
+        System.out.println("\n Servidor Aplicacion Gestión de Ninjas iniciado en http://localhost:8080/ \n Hecho por el Grupo Tomates\n");
    }
 }

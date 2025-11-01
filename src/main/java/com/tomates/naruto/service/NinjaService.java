@@ -13,25 +13,21 @@ public class NinjaService {
         this.ninjaRepository = ninjaRepository;
     }
 
-    // Obtener todos los ninjas
-    public List<Ninja> obtenerTodos() {
+    public Ninja registrarNinja(Ninja ninja) {
+        return ninjaRepository.save(ninja);
+    }
+
+    public List<Ninja> listarNinjas() {
         return ninjaRepository.findAll();
     }
 
-    // Obtener ninja por ID
-    public Ninja obtenerPorId(Long id) {
+    public Ninja obtenerNinja(Long id) {
         return ninjaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ninja no encontrado con ID: " + id));
     }
 
-    // Crear o actualizar ninja
-    public Ninja guardar(Ninja ninja) {
-        return ninjaRepository.save(ninja);
-    }
-
-    // Actualizar ninja existente
-    public Ninja actualizar(Long id, Ninja ninjaActualizado) {
-        Ninja existente = obtenerPorId(id);
+    public Ninja actualizarNinja(Long id, Ninja ninjaActualizado) {
+        Ninja existente = obtenerNinja(id);
         existente.setNombre(ninjaActualizado.getNombre());
         existente.setRango(ninjaActualizado.getRango());
         existente.setAtaque(ninjaActualizado.getAtaque());
@@ -42,8 +38,7 @@ public class NinjaService {
         return ninjaRepository.save(existente);
     }
 
-    // Eliminar ninja
-    public void eliminar(Long id) {
+    public void eliminarNinja(Long id) {
         ninjaRepository.deleteById(id);
     }
 }

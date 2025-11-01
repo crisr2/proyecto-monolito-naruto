@@ -1,12 +1,10 @@
 package com.tomates.naruto.controller;
-
 import com.tomates.naruto.dto.MisionDTO;
 import com.tomates.naruto.entity.Mision;
 import com.tomates.naruto.mapper.EntityMapper;
 import com.tomates.naruto.service.MisionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,35 +21,31 @@ public class MisionController {
         this.mapper = mapper;
     }
 
-    // 🔹 Listar todas las misiones (como DTO)
     @GetMapping
     public ResponseEntity<List<MisionDTO>> listarTodas() {
-        List<MisionDTO> misiones = misionService.obtenerTodas()
+        List<MisionDTO> misiones = misionService.listarMisiones()
                 .stream()
                 .map(mapper::toMisionDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(misiones);
     }
 
-    // 🔹 Obtener una misión específica (como DTO)
     @GetMapping("/{id}")
-    public ResponseEntity<MisionDTO> obtenerPorId(@PathVariable Long id) {
-        Mision mision = misionService.obtenerPorId(id);
+    public ResponseEntity<MisionDTO> obtenerMision(@PathVariable Long id) {
+        Mision mision = misionService.obtenerMision(id);
         if (mision == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(mapper.toMisionDTO(mision));
     }
 
-    // 🔹 Crear misión
     @PostMapping
     public ResponseEntity<MisionDTO> crear(@RequestBody Mision mision) {
-        Mision guardada = misionService.guardar(mision);
+        Mision guardada = misionService.registrarMision(mision);
         return ResponseEntity.ok(mapper.toMisionDTO(guardada));
     }
 
-    // 🔹 Asignar ninja a misión (devuelve DTO limpio o mensaje de error)
-    @PostMapping("/{misionId}/asignar/{ninjaId}")
+    @PostMapping("/{misionId}/{ninjaId}")
     public ResponseEntity<?> asignarNinja(@PathVariable Long misionId, @PathVariable Long ninjaId) {
         try {
             Mision m = misionService.asignarNinja(misionId, ninjaId);
@@ -61,10 +55,9 @@ public class MisionController {
         }
     }
 
-    // 🔹 Eliminar misión
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        misionService.eliminar(id);
+        misionService.eliminarMision(id);
         return ResponseEntity.noContent().build();
     }
 }

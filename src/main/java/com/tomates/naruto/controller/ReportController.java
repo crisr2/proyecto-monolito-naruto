@@ -1,10 +1,9 @@
 package com.tomates.naruto.controller;
-
 import com.tomates.naruto.service.ReportService;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequestMapping("/api/reportes")
@@ -17,30 +16,28 @@ public class ReportController {
         this.reportService = reportService;
     }
 
+    private String fechaActual() {
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm"));
+    }
+
     @GetMapping("/txt")
-    public ResponseEntity<byte[]> generarTXT() {
-        byte[] data = reportService.generarReporteTXT();
+    public ResponseEntity<String> exportarTxt() {
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=reporte_shinobi.txt")
-                .contentType(MediaType.TEXT_PLAIN)
-                .body(data);
+            .header("Content-Disposition", "attachment; filename=" + "reporte_" + fechaActual() + ".txt")
+            .body(reportService.generarReporteTXT());
     }
 
     @GetMapping("/json")
-    public ResponseEntity<byte[]> generarJSON() {
-        byte[] data = reportService.generarReporteJSON();
+    public ResponseEntity<String> exportarJson() throws Exception {
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=reporte_shinobi.json")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(data);
+            .header("Content-Disposition", "attachment; filename=" + "reporte_" + fechaActual() + ".json")
+            .body(reportService.generarReporteJSON());
     }
 
     @GetMapping("/xml")
-    public ResponseEntity<byte[]> generarXML() {
-        byte[] data = reportService.generarReporteXML();
+    public ResponseEntity<String> exportarXml() throws Exception {
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=reporte_shinobi.xml")
-                .contentType(MediaType.APPLICATION_XML)
-                .body(data);
+            .header("Content-Disposition", "attachment; filename=" + "reporte_" + fechaActual() + ".xml")
+            .body(reportService.generarReporteXML());
     }
 }

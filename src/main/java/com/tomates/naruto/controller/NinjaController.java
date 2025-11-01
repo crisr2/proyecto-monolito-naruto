@@ -31,15 +31,15 @@ public class NinjaController {
 
     @GetMapping
     public List<NinjaDTO> listarTodos() {
-        return ninjaService.obtenerTodos()
+        return ninjaService.listarNinjas()
                 .stream()
                 .map(mapper::toNinjaDTO)
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    public NinjaDTO obtenerPorId(@PathVariable Long id) {
-        return mapper.toNinjaDTO(ninjaService.obtenerPorId(id));
+    public NinjaDTO obtenerNinja(@PathVariable Long id) {
+        return mapper.toNinjaDTO(ninjaService.obtenerNinja(id));
     }
 
     @PostMapping
@@ -49,7 +49,7 @@ public class NinjaController {
                     .orElseThrow(() -> new RuntimeException("Aldea no encontrada"));
             ninja.setAldea(aldea);
         }
-        Ninja guardado = ninjaService.guardar(ninja);
+        Ninja guardado = ninjaService.registrarNinja(ninja);
         return mapper.toNinjaDTO(guardado);
     }
 
@@ -60,18 +60,18 @@ public class NinjaController {
                     .orElseThrow(() -> new RuntimeException("Aldea no encontrada"));
             ninjaActualizado.setAldea(aldea);
         }
-        Ninja actualizado = ninjaService.actualizar(id, ninjaActualizado);
+        Ninja actualizado = ninjaService.actualizarNinja(id, ninjaActualizado);
         return mapper.toNinjaDTO(actualizado);
     }
 
     @DeleteMapping("/{id}")
     public void eliminar(@PathVariable Long id) {
-        ninjaService.eliminar(id);
+        ninjaService.eliminarNinja(id);
     }
 
-    @PostMapping("/{ninjaId}/asignar-jutsu/{jutsuId}")
+    @PostMapping("/{ninjaId}/{jutsuId}")
     public NinjaDTO asignarJutsu(@PathVariable Long ninjaId, @PathVariable Long jutsuId) {
-        Ninja ninja = ninjaService.obtenerPorId(ninjaId);
+        Ninja ninja = ninjaService.obtenerNinja(ninjaId);
         if (ninja == null) {
             throw new RuntimeException("Ninja no encontrado");
         }
@@ -87,6 +87,6 @@ public class NinjaController {
             ninja.getJutsus().add(jutsu);
         }
 
-        return mapper.toNinjaDTO(ninjaService.guardar(ninja));
+        return mapper.toNinjaDTO(ninjaService.registrarNinja(ninja));
     }
 }

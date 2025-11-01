@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AldeaRepository extends JpaRepository<Aldea, Long> {
 
-    // Buscar por nombre exacto
+    // Buscar ninja por nombre exacto
     Aldea findByNombre(String nombre);
 }

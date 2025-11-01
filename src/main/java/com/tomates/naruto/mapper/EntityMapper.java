@@ -1,9 +1,7 @@
 package com.tomates.naruto.mapper;
-
 import com.tomates.naruto.dto.*;
 import com.tomates.naruto.entity.*;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.stream.Collectors;
 

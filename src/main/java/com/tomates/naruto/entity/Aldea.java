@@ -15,29 +15,16 @@ public class Aldea {
     private List<Ninja> ninjas;
 
     // Getters y Setters
-    public Long getId() {
-        return id;
-    }
-    public void setId(Long id) {
-        this.id = id;
-    }
-    public String getNombre() {
-        return nombre;
-    }
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-    public String getNacion() {
-        return nacion;
-    }
-    public void setNacion(String nacion) {
-        this.nacion = nacion;
-    }
-    public List<Ninja> getNinjas() {
-        return ninjas;
-    }
-    public void setNinjas(List<Ninja> ninjas) {
-        this.ninjas = ninjas;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    
+    public String getNacion() { return nacion; }
+    public void setNacion(String nacion) { this.nacion = nacion; }
+
+    public List<Ninja> getNinjas() { return ninjas; }
+    public void setNinjas(List<Ninja> ninjas) { this.ninjas = ninjas; }
     
 }
